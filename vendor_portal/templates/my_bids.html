@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}My Submissions & Status Tracking - GeM Vendor Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header & Summary -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                <a href="/tenders" class="hover:text-gem-700">GeM Portal</a>
+                <span>/</span>
+                <span class="text-slate-800 font-semibold">Vendor Submissions</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                My Tender Submissions & Live Status
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Track compliance scoring, AI OCR analysis, and officer determinations across submitted government bids.
+            </p>
+        </div>
+
+        <a href="/apply" class="px-4 py-2.5 bg-gem-700 hover:bg-gem-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 self-start sm:self-auto">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Submit Another Bid</span>
+        </a>
+    </div>
+
+    <!-- Bid Tracking Active Status Banner -->
+    <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 border border-emerald-200/90 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
+                ✓
+            </div>
+            <div>
+                <div class="text-xs font-bold text-emerald-950 flex items-center gap-2">
+                    <span>Bid Tracking Active</span>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold">Live Status</span>
+                </div>
+                <div class="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                    Track your submitted bids, document verification progress, compliance results, and procurement updates from your company dashboard.
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 self-start sm:self-auto text-xs font-mono text-emerald-800 bg-emerald-100/70 px-3 py-1.5 rounded-xl border border-emerald-200 flex-shrink-0">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Compliance Monitoring Active</span>
+        </div>
+    </div>
+
+
+    <!-- Submissions Table / Cards -->
+    {% if bids %}
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900">Submitted Bids Registry ({{ bids | length }})</h3>
+            <span class="text-[11px] font-mono text-slate-500">Vendor: {{ current_vendor.company_name }}</span>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% for b in bids %}
+            <div class="p-5 sm:p-6 hover:bg-slate-50/60 transition-colors space-y-4">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    
+                    <!-- Left: Bid IDs & Tender info -->
+                    <div class="space-y-1.5">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-mono text-xs font-black px-2.5 py-1 rounded-lg bg-gem-100 text-gem-900 border border-gem-200">
+                                {{ b.bid_id }}
+                            </span>
+                            <span class="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                                {{ b.tender_id }}
+                            </span>
+                            
+                            <!-- Status Badges -->
+                            {% if b.status == 'Pending AI Verification' or b.status == 'PENDING_AI_VERIFICATION' %}
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                Pending AI Verification
+                            </span>
+                            {% elif b.status == 'UNDER_VERIFICATION' %}
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
+                                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                Under AI Scrutiny
+                            </span>
+                            {% elif b.status == 'VERIFIED' or b.status == 'APPROVED' %}
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                {{ b.status }}
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                                {{ b.status }}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-sm font-bold text-slate-900">
+                            {{ b.tender_title }}
+                        </div>
+                        <div class="text-xs text-slate-500">
+                            {{ b.tender_department }}
+                        </div>
+                    </div>
+
+                    <!-- Right: Submission Time & Scores -->
+                    <div class="flex items-center gap-6 self-start lg:self-auto text-xs flex-shrink-0">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block uppercase font-semibold">Submitted At</span>
+                            <span class="font-mono text-slate-700 font-semibold">{{ b.submission_date[:10] }} {{ b.submission_date[11:16] }} UTC</span>
+                        </div>
+
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 block uppercase font-semibold">Compliance Score</span>
+                            <span class="font-mono font-black text-sm {% if b.compliance_score >= 75 %}text-emerald-600{% elif b.compliance_score > 0 %}text-amber-600{% else %}text-slate-400{% endif %}">
+                                {% if b.compliance_score > 0 %}{{ b.compliance_score }}/100{% else %}Queued{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- AI Compliance Breakdown & Officer Determination (if verified) -->
+                {% if b.compliance_results %}
+                <div class="pt-2 border-t border-slate-100">
+                    <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <span>AI Compliance Verification Scrutiny ({{ b.compliance_results | length }} Criteria)</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        {% for cr in b.compliance_results %}
+                        <div class="p-2 rounded-lg border text-[11px] flex items-center justify-between {% if cr.status == 'VERIFIED' %}bg-emerald-50/70 border-emerald-200 text-emerald-950{% elif cr.status == 'MISMATCH' %}bg-amber-50/70 border-amber-200 text-amber-950{% else %}bg-rose-50/70 border-rose-200 text-rose-950{% endif %}">
+                            <span class="font-medium truncate max-w-[180px]" title="{{ cr.requirement_name }}">{{ cr.requirement_name }}</span>
+                            <span class="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded {% if cr.status == 'VERIFIED' %}bg-emerald-100 text-emerald-800{% elif cr.status == 'MISMATCH' %}bg-amber-100 text-amber-800{% else %}bg-rose-100 text-rose-800{% endif %}">
+                                {{ cr.status }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if b.decision_info %}
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <span class="text-slate-400 text-[10px] uppercase font-semibold block">Official Procurement Determination</span>
+                        <span class="font-bold {% if b.decision_info.decision == 'APPROVED' %}text-emerald-700{% elif b.decision_info.decision == 'REJECTED' %}text-rose-700{% else %}text-amber-700{% endif %}">
+                            {{ b.decision_info.decision }}
+                        </span>
+                        {% if b.decision_info.comments %}
+                        <span class="text-slate-600 text-[11px] block mt-0.5">{{ b.decision_info.comments }}</span>
+                        {% endif %}
+                    </div>
+                    {% if b.decision_info.decided_at %}
+                    <div class="text-[10px] text-slate-400 font-mono flex-shrink-0">
+                        Recorded: {{ b.decision_info.decided_at[:10] }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Attached PDF Documents Chips -->
+                <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Attached PDFs ({{ b.documents | length }}):</span>
+                        {% for doc in b.documents %}
+                        <a href="/documents/{{ doc.id }}/download" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-gem-100 text-slate-700 hover:text-gem-800 font-mono text-[11px] transition-colors border border-slate-200">
+                            <svg class="w-3.5 h-3.5 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path></svg>
+                            <span>{{ doc.file_name }}</span>
+                            <span class="text-slate-400">({{ doc.file_size_kb }} KB)</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+
+                    <a href="/bids/{{ b.id }}/receipt" class="text-gem-700 hover:text-gem-900 font-bold hover:underline inline-flex items-center gap-1 text-[11px]">
+                        <span>View Official Acknowledgment Receipt</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+        <div class="w-14 h-14 rounded-full bg-gem-50 text-gem-700 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">No Bids Submitted Yet</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+            Browse open government tenders and submit your technical proposals to see them appear here.
+        </p>
+        <a href="/tenders" class="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-gem-700 text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all">
+            <span>Browse Active Tenders</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

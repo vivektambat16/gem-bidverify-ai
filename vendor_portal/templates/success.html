@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Bid Submitted Successfully - GeM Vendor Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-4">
+
+    <!-- Success Card -->
+    <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden text-center p-8 sm:p-10 relative">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-5 shadow-sm border border-emerald-200">
+            <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold mb-3 border border-emerald-200">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            SUBMISSION ACKNOWLEDGED & ENCRYPTED
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Tender Bid Submitted Successfully!
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
+            Your technical proposals and statutory compliance documents have been securely stored in the shared GeM database and queued for AI verification.
+        </p>
+
+        <!-- Acknowledgment Details Box -->
+        <div class="mt-8 p-6 rounded-2xl bg-slate-50 border border-slate-200/90 text-left space-y-3 font-sans">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Bid Reference Number</span>
+                <span class="font-mono text-sm sm:text-base font-black text-gem-900 px-2 py-0.5 rounded bg-gem-100 border border-gem-200">
+                    {{ bid.bid_id }}
+                </span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-medium">Target Tender:</span>
+                <span class="font-mono font-bold text-slate-800">{{ bid.tender_id }}</span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-medium">Submitting Entity:</span>
+                <span class="font-bold text-slate-800">{{ bid.vendor_name }}</span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-medium">Entity GSTIN:</span>
+                <span class="font-mono font-bold text-gem-800">{{ bid.gstin }}</span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-medium">Documents Uploaded:</span>
+                <span class="font-bold text-slate-800">{{ bid.documents_count }} Verified PDF(s)</span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-200">
+                <span class="text-slate-500 font-medium">Verification Status:</span>
+                <span class="inline-flex items-center gap-1.5 font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    {{ bid.status }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Submission Status Notice -->
+        <div class="mt-6 p-4 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs text-emerald-950 text-left flex items-start gap-3">
+            <div class="text-base mt-0.5">✓</div>
+            <div class="leading-relaxed">
+                <strong class="font-bold">Bid Submission Queued:</strong> Your bid (<code class="font-mono font-bold">{{ bid.bid_id }}</code>) has been securely registered in the GeM procurement database. Attached technical proposals, price schedules, and statutory certificates are queued for automated AI verification and compliance scoring.
+            </div>
+        </div>
+
+        <!-- Action CTAs -->
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href="/my-bids" class="w-full sm:w-auto px-6 py-3 bg-gem-700 hover:bg-gem-800 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                <span>Track in My Submissions</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </a>
+            <a href="/bids/{{ bid.id }}/receipt" class="w-full sm:w-auto px-5 py-3 bg-white hover:bg-slate-50 text-gem-800 border border-gem-300 font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2">
+                <svg class="w-4 h-4 text-gem-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <span>View Official Receipt</span>
+            </a>
+            <a href="/tenders" class="w-full sm:w-auto px-4 py-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-xl transition-colors">
+                Browse More Tenders
+            </a>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

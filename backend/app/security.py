@@ -36,10 +36,12 @@ def create_token(user: dict) -> str:
     payload = {
         "sub": str(user["id"]),
         "username": user["username"],
+        "role": user.get("role", "Procurement Officer"),
         "iat": now,
         "exp": now + config.TOKEN_TTL_HOURS * 3600,
     }
     return jwt.encode(payload, config.SECRET_KEY, algorithm="HS256")
+
 
 
 def decode_token(token: str) -> dict:

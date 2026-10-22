@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tender.tender_id }} - Tender Details - GeM Vendor Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Breadcrumb & Back -->
+    <div class="flex items-center justify-between">
+        <a href="/tenders" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gem-700 hover:text-gem-900 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <span>Back to Active Tenders List</span>
+        </a>
+        <div class="text-[11px] font-mono text-slate-400">Ref: {{ tender.tender_id }}</div>
+    </div>
+
+    <!-- Tender Header Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-card p-6 sm:p-8 space-y-5">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="font-mono text-xs font-bold px-3 py-1 rounded-lg bg-gem-100 text-gem-900 border border-gem-200">
+                {{ tender.tender_id }}
+            </span>
+            <span class="text-xs font-semibold px-3 py-1 rounded-lg bg-slate-100 text-slate-700">
+                {{ tender.department }}
+            </span>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                ACTIVE
+            </span>
+        </div>
+
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                {{ tender.title }}
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                {{ tender.description }}
+            </p>
+        </div>
+
+        <!-- Key Procurement Metrics Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Estimated Tender Value</div>
+                <div class="text-base sm:text-lg font-black text-slate-900 font-mono mt-0.5">
+                    ₹{{ "{:,.2f}".format(tender.tender_value) }}
+                </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Bid Submission Deadline</div>
+                <div class="text-base sm:text-lg font-black text-slate-900 font-mono mt-0.5">
+                    {{ tender.deadline[:10] }}
+                </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Evaluation Framework</div>
+                <div class="text-base sm:text-lg font-black text-emerald-700 font-mono mt-0.5">
+                    Automated AI
+                </div>
+            </div>
+        </div>
+
+        <!-- Apply CTA -->
+        <div class="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100">
+            <div class="text-xs text-slate-500">
+                Ensure all mandatory compliance documents are prepared in PDF format prior to submission.
+            </div>
+            <a href="/apply?tender_id={{ tender.id }}" class="w-full sm:w-auto px-6 py-3 bg-gem-700 hover:bg-gem-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                <span>Proceed to Apply & Upload PDFs</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- Detailed Requirements Matrix -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-card p-6 sm:p-8">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900">Mandatory Eligibility & Technical Criteria</h3>
+                <p class="text-xs text-slate-500">Evaluated deterministically by the GeM BidVerify AI Compliance Engine.</p>
+            </div>
+            <span class="text-xs font-mono font-bold text-gem-700 bg-gem-50 px-2.5 py-1 rounded-lg border border-gem-200">
+                {{ tender.requirements | length }} Statutory Rules
+            </span>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% for r in tender.requirements %}
+            <div class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                            {{ r.requirement_code }}
+                        </span>
+                        <span class="text-xs font-bold text-slate-900">
+                            {{ r.requirement_name }}
+                        </span>
+                        {% if r.is_mandatory %}
+                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200">
+                            MANDATORY
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="text-[11px] text-slate-500">
+                        Rule Condition: <span class="text-slate-700 font-medium">{{ r.min_condition }}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 text-right flex-shrink-0">
+                    <div class="text-[11px] text-slate-400 font-mono">
+                        Verification: <span class="text-slate-700 font-semibold">{{ r.verification_source }}</span>
+                    </div>
+                    <div class="w-12 text-center text-xs font-mono font-black text-gem-900 bg-gem-50 py-1 rounded border border-gem-200">
+                        {{ r.weight }} pts
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

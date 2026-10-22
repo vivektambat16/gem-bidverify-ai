@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Registration - GeM e-Procurement Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+
+    <!-- Header Breadcrumb & Intro -->
+    <div class="mb-6 text-center sm:text-left">
+        <div class="flex items-center justify-center sm:justify-start gap-2 text-xs text-slate-500 mb-2">
+            <a href="/tenders" class="hover:text-gem-700">GeM Portal</a>
+            <span>/</span>
+            <span class="text-slate-800 font-semibold">Vendor Onboarding</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Register as an Approved Vendor
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+            Create your statutory corporate profile to participate in Central and State Government e-Tenders on GeM.
+        </p>
+    </div>
+
+    <!-- Quick Demo Fill Banner -->
+    <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 rounded-2xl p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
+                ⚡
+            </div>
+            <div>
+                <div class="text-xs font-bold text-amber-950">Project Review / Professor Demo Shortcut</div>
+                <div class="text-[11px] text-amber-800">Fill authentic sample enterprise data with a single click.</div>
+            </div>
+        </div>
+        <button type="button" onclick="fillDemoVendor()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 flex-shrink-0">
+            <span>⚡ Auto-Fill Demo Enterprise</span>
+        </button>
+    </div>
+
+    <!-- Main Registration Form Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-card p-6 sm:p-8">
+        <form action="/register" method="POST" class="space-y-5" id="registerForm">
+
+            <!-- Company Legal Name -->
+            <div>
+                <label for="company_name" class="block text-xs font-bold text-slate-700 mb-1.5">
+                    Company / Enterprise Legal Name <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <input type="text" id="company_name" name="company_name" required
+                           placeholder="e.g., Bharat Cybernetics & Cloud Solutions Pvt Ltd"
+                           class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none transition-all placeholder:text-slate-400">
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">As registered with Ministry of Corporate Affairs (MCA) / GSTN.</p>
+            </div>
+
+            <!-- GSTIN & Auto-Derived PAN Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="gstin" class="block text-xs font-bold text-slate-700 mb-1.5">
+                        GSTIN (15 Alphanumeric) <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" id="gstin" name="gstin" required maxlength="15"
+                           oninput="handleGstinInput(this)"
+                           placeholder="e.g., 27AABCT3421K1Z5"
+                           class="w-full text-xs sm:text-sm font-mono uppercase tracking-wider border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none transition-all placeholder:text-slate-400">
+                    <div id="gstinFeedback" class="text-[10px] text-slate-500 mt-1 font-mono">Format: 2 digits + 10-char PAN + 1 + Z + Check Digit</div>
+                </div>
+
+                <div>
+                    <label for="pan" class="block text-xs font-bold text-slate-700 mb-1.5">
+                        Permanent Account Number (PAN)
+                    </label>
+                    <input type="text" id="pan" name="pan" readonly
+                           placeholder="Auto-extracted from GSTIN"
+                           class="w-full text-xs sm:text-sm font-mono uppercase tracking-wider bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 cursor-not-allowed">
+                    <div class="text-[10px] text-slate-500 mt-1 font-mono">Derived from GSTIN characters 3 to 12</div>
+                </div>
+            </div>
+
+            <!-- Official Email & Mobile -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="email" class="block text-xs font-bold text-slate-700 mb-1.5">
+                        Official Correspondence Email <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="email" id="email" name="email" required
+                           placeholder="tender-desk@enterprise.co.in"
+                           class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none transition-all placeholder:text-slate-400">
+                </div>
+
+                <div>
+                    <label for="contact_phone" class="block text-xs font-bold text-slate-700 mb-1.5">
+                        Primary Contact Number
+                    </label>
+                    <input type="tel" id="contact_phone" name="contact_phone"
+                           placeholder="+91 98765 43210"
+                           class="w-full text-xs sm:text-sm font-mono border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none transition-all placeholder:text-slate-400">
+                </div>
+            </div>
+
+            <!-- Password & Business Type -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="password" class="block text-xs font-bold text-slate-700 mb-1.5">
+                        Portal Security Password <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="password" id="password" name="password" required minlength="6"
+                           placeholder="Minimum 6 characters"
+                           class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none transition-all">
+                </div>
+
+                <div>
+                    <label for="business_type" class="block text-xs font-bold text-slate-700 mb-1.5">
+                        Enterprise Category (GFR Benefits)
+                    </label>
+                    <select id="business_type" name="business_type"
+                            class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none transition-all font-medium">
+                        <option value="REGULAR">Regular Enterprise</option>
+                        <option value="MSME">Micro & Small Enterprise (MSME - Udyam)</option>
+                        <option value="STARTUP">DIPP / DPIIT Recognized Startup</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Registered Address -->
+            <div>
+                <label for="address" class="block text-xs font-bold text-slate-700 mb-1.5">
+                    Registered Corporate Address
+                </label>
+                <textarea id="address" name="address" rows="2"
+                          placeholder="Plot 42, Electronics City Phase 1, Bengaluru, Karnataka - 560100"
+                          class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none transition-all placeholder:text-slate-400"></textarea>
+            </div>
+
+            <!-- Terms & Statutory Confirmation -->
+            <div class="pt-2 border-t border-slate-100">
+                <label class="flex items-start gap-2.5 cursor-pointer">
+                    <input type="checkbox" required checked class="mt-0.5 rounded text-gem-700 focus:ring-gem-600 border-slate-300">
+                    <span class="text-[11px] text-slate-600 leading-normal">
+                        I hereby declare that the corporate details and statutory GSTIN provided are true and accurate under the General Financial Rules (GFR 2017) Integrity Pact.
+                    </span>
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-gem-700 to-gem-900 hover:from-gem-800 hover:to-gem-950 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md shadow-gem-900/20 hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                <span>Complete Vendor Registration & Continue</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+
+            <!-- Already Registered Link -->
+            <div class="text-center text-xs text-slate-500 pt-2">
+                Already registered your enterprise? 
+                <a href="/login" class="text-gem-700 hover:text-gem-900 font-bold hover:underline">
+                    Sign in to Vendor Portal &rarr;
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script>
+function handleGstinInput(input) {
+    const val = input.value.toUpperCase();
+    input.value = val;
+    const panInput = document.getElementById('pan');
+    const feedback = document.getElementById('gstinFeedback');
+    
+    if (val.length >= 12) {
+        panInput.value = val.substring(2, 12);
+    } else {
+        panInput.value = '';
+    }
+
+    const regex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    if (val.length === 15) {
+        if (regex.test(val)) {
+            feedback.innerHTML = '<span class="text-emerald-600 font-bold">✓ Valid GSTIN Structure Verified</span>';
+        } else {
+            feedback.innerHTML = '<span class="text-rose-600 font-bold">✗ Invalid GSTIN Pattern</span>';
+        }
+    } else {
+        feedback.innerText = `${val.length}/15 characters entered`;
+    }
+}
+
+function fillDemoVendor() {
+    document.getElementById('company_name').value = "NexGen Compute Technologies Pvt Ltd";
+    document.getElementById('gstin').value = "27AABCT3421K1Z5";
+    document.getElementById('pan').value = "AABCT3421K";
+    document.getElementById('email').value = "bids@nexgencompute.in";
+    document.getElementById('contact_phone').value = "+91 98201 54321";
+    document.getElementById('password').value = "Vendor@2026";
+    document.getElementById('business_type').value = "MSME";
+    document.getElementById('address').value = "Tower B, Cyber City, Phase II, Mumbai, Maharashtra - 400051";
+    document.getElementById('gstinFeedback').innerHTML = '<span class="text-emerald-600 font-bold">✓ Valid Demo GSTIN Structure</span>';
+}
+</script>
+{% endblock %}

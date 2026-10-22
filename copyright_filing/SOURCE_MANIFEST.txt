@@ -1,20 +1,20 @@
 GeM BidVerify AI - Source Code Listing
-Generated: 2026-10-10 10:38
-Files: 46   Lines: 10367   Listing pages: 141
+Generated: 2026-10-20 22:50
+Files: 65   Lines: 13670   Listing pages: 189
 
  lines  SHA-256                                                           file
-   301  4bccdd5a54fce6fdb55dede845913c12ec6c309bc15100086cdfc97b7993a42e  backend/app/main.py
+   310  ec327108b50b7895b2dd90efc2cff04d7d340d667066a8771eb0824a76e8e739  backend/app/main.py
     60  cdb86a3a26b65bb955a0e2655a766240139c50e3d56b63757be0e9172a2a1ba2  backend/app/config.py
-   214  659b60c3444ea52ce39ed888d3ad5632272ad217dd1677e81c2aee195bf46cfd  backend/app/db.py
-    64  852dd863786d1815b1fa43d33d38be92ba4f8140eaa7c335c17e17a6eea6cd1b  backend/app/security.py
-   644  93ada39215058655cf72f25ea55d437f9e0e10d14aef267685561eeb0596fe15  backend/app/services.py
-   293  7a318007b6a692d22ee5302de27926b256e38c13919f601d6e16ecc65201ca62  backend/app/rules.py
+   225  2082e3b8b596d519cf250bf63b14f6a775f221cf68273a81bac4755209e3998c  backend/app/db.py
+    66  37cac8fedc755fcbb9b38f1ad0153fdba034268200d22f2f10fd039ae7f4c22c  backend/app/security.py
+   691  36d20c7995bca0429bdf6cc239e8b56851ca59a2d351f5820f5179c0c1e920a4  backend/app/services.py
+   296  648223796cc1f8e1b482c2b7667ae127ebba1044e0817ad8fc0172ae23d4a1e2  backend/app/rules.py
    373  6ec1ac219b37c65e2021adf98a1f54a22f7bb0b4f55b105beb8860a67dc180a8  backend/app/extraction.py
    102  2550c3396da85ea40c5145557f45785addfaaffaab100ef321d9133dff490f9c  backend/app/adapters.py
     10  8f99a7427112be9bbb304aa883489dab15925a68ec341e5490597f6560197fc7  src/main.jsx
     43  feea2163eabf65ce4fd4411bf9f2bff7371a4fd59df79e8fca539a70342359cd  src/App.jsx
      1  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  backend/app/__init__.py
-     8  15bd20e58737cab0d0bb8e88212dc57d0db9211c53cdfc3a7d59158746deddd7  backend/requirements.txt
+     9  6b888e19b43db16a1e7fef0853ddf14a8a1dee302fa27c16ef85df22979c8d50  backend/requirements.txt
    212  257063fa8bbd4f17cca568044289e3a6ead5b3d5874a3725f4ff1d7ae68f1a4b  backend/tests/test_backend.py
     71  cdcd4d82f0fc236f99d5ce6ca075e1d3831903d1dee2bdd27c85fb4ef508cbf4  backend/tests/test_routes_stub.py
     23  3b5ac8349fcbce5e6aaa3df6a5d8803d6479b5849a58a1dd914084925658dfd5  index.html
@@ -41,11 +41,30 @@ Files: 46   Lines: 10367   Listing pages: 141
    495  b8f36f406e18541d5f2aba3dc52b243fabeae02b203abf0a3eb5113f95c60e76  src/pages/BidsPage.jsx
    596  4ed18f458dc867f68b9c6c1bc87d342a3456b3bbab82c7cdfca210a82d7fb1aa  src/pages/DashboardPage.jsx
    512  b9d8509648dafea91130863b814328c10fcd4d0636383b33a374bd05da7f59b7  src/pages/IntegrationsPage.jsx
-   841  b6fc10925001f8e9e4f2b9c0487e8eb6623aad112b2c3aa73da04db9676282ef  src/pages/LoginPage.jsx
+   782  9a3d6c813b77f0ca6f1273e3f518991fb537c3731516902e5875f2a1c64ffd4b  src/pages/LoginPage.jsx
    687  b11bd54ab6d104a95e0f60146ca9eabe3bb1e642a8fbca89c770d3f8a58e5d92  src/pages/TendersPage.jsx
-     7  7e1b492fdc43d84883d35ba0bddc49899f4b2cec9e9ba370a0f80e8a309a1f8a  src/routes/ProtectedRoute.jsx
-     4  64dd44e7f93b9ac43f2ec8ccf32dc600ab5042f2070b18b7b09d92df778d4ca7  start-all.bat
+    27  c78ba7994d425498dbe2a856399e97640f59dc07ab99304e23b6302f42e6879c  src/routes/ProtectedRoute.jsx
+     5  a6d0d9dd648277d5c6a0186004e09f25917eb3ff359871d051083678df9909de  start-all.bat
     13  f23110627acb79686ff61e486d38a26f1c9c2afa985bef9c838f6c1e671b5f2a  start-backend.bat
      6  c2ad5904ed3b2a218476f47c1c7f48c94083e125916916e0adb959300ce228bc  start-frontend.bat
+    12  a413c9096e124955b215098a6be5d9e3824a75ba619ba31d946cbbeed36599a5  start-vendor-portal.bat
     47  8654caf799999ec439fc1e9ab37db6e0dc0751b73430ad1c02965b77eaa11ecc  tailwind.config.js
+     1  2dcaea7fce83708520935423abf60669b51a3f776d3f3a55b2ce0ccbcd84a0da  vendor_portal/app/__init__.py
+   116  3e3e58bf36d4a8fe0bb62741bcffbcf27ae1329a70fef2349e20ebd9cbf18ad0  vendor_portal/app/auth.py
+    57  7e664ecc9a2988f01a86cece05c796b9f2efd660c90cbe2df4e9bb0a312ff796  vendor_portal/app/config.py
+   615  689f3aedd5f6fdfc63228ffdc85e79e852faf513daa6266f15d99cb8bbd13a45  vendor_portal/app/database.py
+   612  a1c0b8629c064a0cb0ad60d644689dcf0d84446dd3d448e37dee127ad078b273  vendor_portal/app/main.py
+    51  7d3a70aa6fdfe8d069d8c9c9732941a4d9b6af9ddbed09e5a68344a6e50090c8  vendor_portal/app/models.py
+   206  e9799fe29359b3199e87b728579dfe8678bc72607fcff9a7059d2f3f38ce7ee4  vendor_portal/app/sample_generator.py
+     6  7734b1885a0cd055e69e47e0c1781e22002607fa831d19bd950d60b2232fe2cf  vendor_portal/requirements.txt
+    19  1c625726edd8a6dc6dbddd524ab4878a6af43237054f582f9e9a05263eae4adb  vendor_portal/run.py
+   301  22c160f4b495fb49c88f9dfd9f80fdb21d7923e20e5c66e00831c84077dbe268  vendor_portal/templates/apply.html
+   280  aad5a6ba17f9f35b8ee0c9b5a06b2a24db2b13d1eacdf210e46154ba36c2eb09  vendor_portal/templates/base.html
+    95  65bb6e47fe4a39b25dd5b56f346a667b20394d1e3b0b71557895c808d45c52c1  vendor_portal/templates/login.html
+   201  0794fb4ef8b9025b54ca744af5b6481a628a855c8427a292626622987d326a1a  vendor_portal/templates/my_bids.html
+   112  16e9d3f532587a72a810a113e24ee4c06a133d3512fd85028efab862f4eb7928  vendor_portal/templates/receipt.html
+   201  964d8604cf6d77d342377f3f7a1f251891285b50b36d6eb5e4e92a328a773044  vendor_portal/templates/register.html
+    90  877521d39b491946b901d7a5e40c96b6f28994566c22d794b4b70408437904df  vendor_portal/templates/success.html
+   124  f938d791b82971f6ec2d693ef19babf81e859ffb8adc5cfeead0fc6793fb047b  vendor_portal/templates/tender_detail.html
+   169  b01974ead7b4f1c46c461d676c0e464f0e0bae832d75e58fed69138ac3d1e6d8  vendor_portal/templates/tenders.html
     13  4d33067d76aae209d56cfcaf04a05f5f3fbc826448a2c34b1699f86ab379eb24  vite.config.js

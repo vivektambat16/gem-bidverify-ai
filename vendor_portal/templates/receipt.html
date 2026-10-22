@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acknowledgment Receipt - {{ bid.bid_id }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0 !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 py-10 px-4 font-sans text-slate-800 antialiased">
+
+    <div class="max-w-3xl mx-auto bg-white p-8 sm:p-12 rounded-2xl shadow-xl border border-slate-200">
+        
+        <!-- Print / Back Toolbar -->
+        <div class="no-print flex items-center justify-between pb-6 mb-6 border-b border-slate-200">
+            <a href="/my-bids" class="text-xs font-bold text-blue-700 hover:underline flex items-center gap-1">
+                &larr; Back to My Submissions
+            </a>
+            <button onclick="window.print()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg shadow-sm">
+                🖨 Print / Save as PDF
+            </button>
+        </div>
+
+        <!-- Official Header -->
+        <div class="text-center pb-6 border-b-2 border-slate-900 space-y-1">
+            <div class="text-xs font-bold uppercase tracking-widest text-slate-500">Government of India · Ministry of Commerce & Industry</div>
+            <div class="text-2xl font-black text-slate-900">Government e-Marketplace (GeM)</div>
+            <div class="text-xs font-semibold text-slate-600">Central e-Procurement Portal · Directorate General of Supplies and Disposals</div>
+            <div class="inline-block mt-2 px-3 py-1 bg-slate-100 rounded text-[11px] font-mono font-bold text-slate-800">
+                OFFICIAL BID SUBMISSION ACKNOWLEDGMENT RECEIPT
+            </div>
+        </div>
+
+        <!-- Receipt Metadata -->
+        <div class="grid grid-cols-2 gap-6 my-6 text-xs">
+            <div>
+                <span class="text-slate-400 uppercase font-semibold text-[10px] block">Bid Reference ID</span>
+                <span class="font-mono text-base font-black text-blue-900">{{ bid.bid_id }}</span>
+            </div>
+            <div class="text-right">
+                <span class="text-slate-400 uppercase font-semibold text-[10px] block">Submission Timestamp</span>
+                <span class="font-mono font-bold text-slate-800">{{ bid.submission_date }}</span>
+            </div>
+            <div>
+                <span class="text-slate-400 uppercase font-semibold text-[10px] block">Target Tender Ref</span>
+                <span class="font-mono font-bold text-slate-900">{{ bid.tender_id }}</span>
+            </div>
+            <div class="text-right">
+                <span class="text-slate-400 uppercase font-semibold text-[10px] block">Initial Audit Status</span>
+                <span class="font-bold text-amber-700 font-mono">{{ bid.status }}</span>
+            </div>
+        </div>
+
+        <!-- Submitting Entity Details -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2 mb-6">
+            <div class="font-bold text-slate-900 border-b border-slate-200 pb-1">Submitting Entity Details</div>
+            <div class="grid grid-cols-2 gap-2">
+                <div><span class="text-slate-500">Company Name:</span> <strong class="text-slate-900">{{ bid.vendor_name }}</strong></div>
+                <div><span class="text-slate-500">GSTIN:</span> <strong class="font-mono text-slate-900">{{ bid.gstin }}</strong></div>
+            </div>
+        </div>
+
+        <!-- Documents Acknowledged -->
+        <div class="mb-8">
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Submitted Compliance Documents</h3>
+            <table class="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
+                <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="py-2.5 px-3">#</th>
+                        <th class="py-2.5 px-3">Document Title</th>
+                        <th class="py-2.5 px-3">Format</th>
+                        <th class="py-2.5 px-3">Size</th>
+                        <th class="py-2.5 px-3">OCR Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for doc in bid.documents %}
+                    <tr>
+                        <td class="py-2.5 px-3 font-mono text-slate-500">{{ loop.index }}</td>
+                        <td class="py-2.5 px-3 font-semibold text-slate-900">{{ doc.file_name }}</td>
+                        <td class="py-2.5 px-3 font-mono uppercase text-slate-500">{{ doc.file_type }}</td>
+                        <td class="py-2.5 px-3 font-mono text-slate-500">{{ doc.file_size_kb }} KB</td>
+                        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800">PARSED</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Statutory Notice & Seal -->
+        <div class="pt-6 border-t-2 border-slate-200 flex items-end justify-between text-[11px] text-slate-500">
+            <div class="max-w-md space-y-1">
+                <p>This is a computer-generated statutory acknowledgment slip issued under General Financial Rules (GFR 2017) Rule 149.</p>
+                <p>Digital Signature Certificate (DSC) / SHA-256 Audit Seal embedded.</p>
+            </div>
+            <div class="text-center font-mono">
+                <div class="w-24 h-24 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center text-[10px] text-slate-400 mx-auto mb-1">
+                    [ GeM e-Seal ]
+                </div>
+                <span class="text-[10px] font-bold text-slate-700">SPV Verified</span>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

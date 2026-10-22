@@ -62,6 +62,10 @@ def user_from_token(token: str) -> dict:
         u = row(conn, "SELECT * FROM users WHERE id=? AND is_active=1", (int(payload["sub"]),))
     if not u:
         raise ServiceError(401, "Account not found or disabled.")
+    # Verify token role matches database user role
+    token_role = payload.get("role")
+    if token_role and token_role != u["role"]:
+        raise ServiceError(403, "Access denied: Token role does not match user account.")
     return u
 
 
@@ -70,6 +74,13 @@ def login(username: str, password: str, ip: str = "unknown") -> dict:
     if locked_until > time.time():
         raise ServiceError(429, "Too many failed attempts. Try again in a few minutes.")
     with connect() as conn:
+        # Check if this identifier belongs to a vendor trying to access officer portal
+        vendor_check = row(conn, "SELECT id, company_name FROM vendors WHERE email=? OR gstin=?", (username, username))
+        if vendor_check:
+            db.add_audit(conn, "OFFICER_ACCESS_DENIED", f"Vendor '{vendor_check['company_name']}' attempted to access Procurement Officer Portal.", "AUTH", None, username, ip_address=ip)
+            conn.commit()
+            raise ServiceError(403, "Access Denied: This portal is exclusively for authorized GeM Procurement Officers. Registered vendors and companies must sign in through the GeM Vendor Portal.")
+
         u = row(conn, "SELECT * FROM users WHERE username=? AND is_active=1", (username,))
         if not u or not security.verify_password(password, u["password_hash"]):
             count += 1
@@ -78,6 +89,14 @@ def login(username: str, password: str, ip: str = "unknown") -> dict:
             db.add_audit(conn, "LOGIN_FAILED", f"Failed sign-in attempt for '{username}'.", "AUTH", None, username, ip_address=ip)
             conn.commit()
             raise ServiceError(401, "Invalid username or password.")
+
+        # Ensure user role is an authorized officer role
+        ALLOWED_OFFICER_ROLES = {"Procurement Officer", "Evaluation Cell Lead", "Vigilance Officer", "admin", "Super Admin"}
+        if u.get("role") not in ALLOWED_OFFICER_ROLES:
+            db.add_audit(conn, "OFFICER_ACCESS_DENIED", f"User '{u['username']}' with non-officer role '{u.get('role')}' denied access.", "AUTH", None, username, ip_address=ip)
+            conn.commit()
+            raise ServiceError(403, "Access Denied: Account lacks required Procurement Officer privileges.")
+
         _login_failures.pop(username, None)
         db.add_audit(conn, "OFFICER_LOGIN", f"Officer '{u['full_name']}' authenticated via GeM console.", "AUTH",
                      None, u["full_name"], ip_address=ip)
@@ -165,7 +184,15 @@ def reset_password(username=None, email=None, otp=None, new_password="") -> dict
     return {"success": True, "message": "Password has been successfully updated. Please sign in with your new password."}
 
 
-def register(data: dict) -> dict:
+def register(data: dict, authorized_by: dict = None) -> dict:
+    # Public self-registration of Procurement Officer accounts is prohibited under GFR 2017
+    if not authorized_by or authorized_by.get("role") not in {"Procurement Officer", "Evaluation Cell Lead", "admin", "Super Admin"}:
+        raise ServiceError(
+            403,
+            "Public registration of Procurement Officer accounts is restricted under GFR 2017 Rule 149. "
+            "Officer profiles must be pre-authorized and provisioned by the GeM Competent Authority. "
+            "For evaluation and demonstration, please use authorized officer demo credentials (officer / demo123)."
+        )
     username = (data.get("username") or "").strip()
     email = (data.get("email") or "").strip()
     if not re.fullmatch(r"[A-Za-z0-9_.-]{3,32}", username):
@@ -183,7 +210,7 @@ def register(data: dict) -> dict:
              data.get("department") or "Department of Electronics & IT (GeM Evaluation Cell)", email,
              data.get("phone") or "", security.hash_password(data["password"])))
         u = row(conn, "SELECT * FROM users WHERE id=?", (cur.lastrowid,))
-        db.add_audit(conn, "ACCOUNT_CREATED", f"New account created for '{u['full_name']}' ({username}).", "AUTH", None, u["full_name"])
+        db.add_audit(conn, "ACCOUNT_CREATED", f"New officer account created for '{u['full_name']}' ({username}) by '{authorized_by['full_name']}'.", "AUTH", None, authorized_by["full_name"])
         return _session(u)
 
 
@@ -324,23 +351,38 @@ def _result(r: dict) -> dict:
 
 
 def _bid_full(conn, b: dict) -> dict:
-    tender = _tender(conn, row(conn, "SELECT * FROM tenders WHERE id=?", (b["tender_pk"],)))
-    bidder = _bidder(row(conn, "SELECT * FROM bidders WHERE id=?", (b["bidder_pk"],)))
+    tender_row = row(conn, "SELECT * FROM tenders WHERE id=?", (b["tender_pk"],)) if b.get("tender_pk") else None
+    if not tender_row and b.get("tender_id"):
+        tender_row = row(conn, "SELECT * FROM tenders WHERE tender_id=?", (str(b["tender_id"]),))
+    tender = _tender(conn, tender_row) if tender_row else {
+        "id": b.get("tender_pk") or 0, "tender_id": str(b.get("tender_id") or "N/A"), "title": "Active Procurement Tender",
+        "department": "Government e-Marketplace", "tender_value": 0, "deadline": "", "status": "ACTIVE",
+        "description": "", "created_at": b.get("submission_date") or "", "bids_count": 1, "requirements": []
+    }
+
+    bidder_row = row(conn, "SELECT * FROM bidders WHERE id=?", (b["bidder_pk"],)) if b.get("bidder_pk") else None
+    bidder = _bidder(bidder_row) if bidder_row else {
+        "id": b.get("bidder_pk") or 0, "company_name": str(b.get("vendor_name") or "Registered Vendor"), "cin": None,
+        "pan": str((b.get("gstin") or "")[2:12]), "gstin": b.get("gstin"), "registered_address": None,
+        "contact_email": None, "contact_phone": None, "is_msme": False, "msme_reg_no": None,
+        "is_startup": False, "startup_dipp_no": None
+    }
     docs = [_document(d) for d in rows(conn, "SELECT * FROM documents WHERE bid_pk=? ORDER BY id", (b["id"],))]
     results = [_result(r) for r in rows(conn, "SELECT * FROM compliance_results WHERE bid_pk=? ORDER BY id", (b["id"],))]
     decision = row(conn, "SELECT * FROM decisions WHERE bid_pk=?", (b["id"],))
     return {
-        "id": b["id"], "bid_id": b["bid_id"], "tender_id": b["tender_pk"], "bidder_id": b["bidder_pk"],
-        "submission_date": b["submission_date"], "status": b["status"], "compliance_score": b["compliance_score"],
-        "risk_level": b["risk_level"], "ai_recommendation": b["ai_recommendation"], "ai_explanation": b["ai_explanation"],
+        "id": b["id"], "bid_id": b["bid_id"] or f"BID-V-{b['id']}", "tender_id": b.get("tender_pk") or (tender_row["id"] if tender_row else 1), "bidder_id": b.get("bidder_pk") or (bidder_row["id"] if bidder_row else 1),
+        "submission_date": b["submission_date"], "status": b["status"], "compliance_score": b["compliance_score"] or 0,
+        "risk_level": b["risk_level"] or "LOW", "ai_recommendation": b["ai_recommendation"] or "PENDING_VERIFICATION", "ai_explanation": b["ai_explanation"] or "Bid submitted via Vendor Portal. Awaiting AI Document Verification.",
         "bidder": bidder, "tender": tender, "documents": docs, "compliance_results": results,
-        "risk_assessment": {"id": b["id"], "risk_level": b["risk_level"], "risk_score": b["risk_score"],
-                            "risk_factors": loads(b["risk_factors"], []), "recommendation": b["ai_recommendation"],
-                            "recommended_action": b["recommended_action"]},
+        "risk_assessment": {"id": b["id"], "risk_level": b["risk_level"] or "LOW", "risk_score": b["risk_score"] or 0,
+                            "risk_factors": loads(b["risk_factors"], []), "recommendation": b["ai_recommendation"] or "PENDING_VERIFICATION",
+                            "recommended_action": b["recommended_action"] or "Proceed with compliance document verification."},
         "officer_decision": ({"id": decision["id"], "officer_name": decision["officer_name"], "decision": decision["decision"],
                               "comments": decision["comments"], "clarification_details": decision["clarification_details"],
                               "decided_at": decision["decided_at"]} if decision else None),
     }
+
 
 
 def _bid_row(conn, ref):
@@ -358,15 +400,19 @@ def get_bid(ref) -> dict:
 def _bid_summary_rows(conn, where="", params=()):
     out = []
     for b in rows(conn, f"SELECT * FROM bids {where} ORDER BY id DESC", params):
-        tender = row(conn, "SELECT tender_id FROM tenders WHERE id=?", (b["tender_pk"],))
-        bidder = row(conn, "SELECT company_name, pan FROM bidders WHERE id=?", (b["bidder_pk"],))
+        tender = row(conn, "SELECT tender_id FROM tenders WHERE id=?", (b["tender_pk"],)) if b.get("tender_pk") else None
+        tender_code = tender["tender_id"] if tender else str(b.get("tender_id") or "N/A")
+        bidder = row(conn, "SELECT company_name, pan FROM bidders WHERE id=?", (b["bidder_pk"],)) if b.get("bidder_pk") else None
+        bidder_name = bidder["company_name"] if bidder else str(b.get("vendor_name") or "Unknown Vendor")
+        bidder_pan = bidder["pan"] if bidder else str((b.get("gstin") or "")[2:12])
         docs = row(conn, "SELECT COUNT(*) AS n FROM documents WHERE bid_pk=?", (b["id"],))["n"]
         last = row(conn, "SELECT evaluated_at FROM evaluations WHERE bid_pk=? ORDER BY id DESC LIMIT 1", (b["id"],))
-        out.append({"id": b["id"], "bid_id": b["bid_id"], "tender_id": tender["tender_id"], "bidder_name": bidder["company_name"],
-                    "bidder_pan": bidder["pan"], "documents_count": docs, "compliance_score": b["compliance_score"],
-                    "risk_level": b["risk_level"], "status": b["status"],
-                    "last_verified": _date_in(last["evaluated_at"] if last else b["submission_date"])})
+        out.append({"id": b["id"], "bid_id": b["bid_id"] or f"BID-V-{b['id']}", "tender_id": tender_code, "bidder_name": bidder_name,
+                    "bidder_pan": bidder_pan, "documents_count": docs, "compliance_score": b["compliance_score"] or 0,
+                    "risk_level": b["risk_level"] or "LOW", "status": b["status"],
+                    "last_verified": _date_in(last["evaluated_at"] if last else b.get("submission_date") or "")})
     return out
+
 
 
 def list_bids(tender_pk=None) -> list:
@@ -584,7 +630,8 @@ def dashboard() -> dict:
         recent = [{k: v for k, v in s.items() if k != "bidder_pan"} for s in _bid_summary_rows(conn)]
         return {
             "total_tenders": len(tenders), "active_tenders": sum(1 for t in tenders if t["status"] == "ACTIVE"),
-            "bids_under_verification": by(lambda b: b["status"] in ("UNDER_VERIFICATION", "PENDING_REVIEW")),
+            "bids_under_verification": by(lambda b: b["status"] in ("UNDER_VERIFICATION", "PENDING_REVIEW", "Pending AI Verification", "PENDING_AI_VERIFICATION")),
+
             "verified_bids": by(lambda b: b["status"] in ("VERIFIED", "APPROVED")),
             "high_risk_bids": by(lambda b: b["risk_level"] in ("HIGH", "CRITICAL")),
             "pending_reviews": by(lambda b: b["status"] == "PENDING_REVIEW" or b["risk_level"] == "MEDIUM"),

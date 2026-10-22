@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Tender Bid - GeM Vendor Portal{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dropzone {
+        transition: all 0.2s ease-in-out;
+    }
+    .dropzone.dragover {
+        border-color: #0066cc;
+        background-color: #f0f7ff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header Breadcrumb & Intro -->
+    <div class="mb-4">
+        <div class="flex items-center gap-2 text-xs text-slate-500 mb-2">
+            <a href="/tenders" class="hover:text-gem-700">Active Tenders</a>
+            <span>/</span>
+            <span class="text-slate-800 font-semibold">Bid Submission</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Official Bid & Document Submission Portal
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+            Submit your technical and financial bids along with mandatory statutory compliance certificates for automated AI verification.
+        </p>
+    </div>
+
+    <!-- Quick Demo Helper Banner for Testing -->
+    <div class="bg-gradient-to-r from-blue-50 via-gem-50 to-indigo-50 border border-gem-200/90 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gem-700 text-white flex items-center justify-center font-bold text-base shadow-sm flex-shrink-0">
+                📄
+            </div>
+            <div>
+                <div class="text-xs font-bold text-gem-950">Need Sample Compliance PDFs for Testing?</div>
+                <div class="text-[11px] text-gem-800">Generate and download ready-made authentic test compliance documents with 1 click.</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="/api/generate-samples/gst" download="GST_Certificate_Sample.pdf" class="px-2.5 py-1.5 bg-white hover:bg-gem-100 text-gem-800 border border-gem-300 text-[11px] font-bold rounded-lg shadow-xs transition-colors flex items-center gap-1">
+                <span>⬇ Sample GST</span>
+            </a>
+            <a href="/api/generate-samples/technical" download="Technical_Bid_Sample.pdf" class="px-2.5 py-1.5 bg-white hover:bg-gem-100 text-gem-800 border border-gem-300 text-[11px] font-bold rounded-lg shadow-xs transition-colors flex items-center gap-1">
+                <span>⬇ Sample Tech Bid</span>
+            </a>
+            <a href="/api/generate-samples/financial" download="Financial_Bid_Sample.pdf" class="px-2.5 py-1.5 bg-white hover:bg-gem-100 text-gem-800 border border-gem-300 text-[11px] font-bold rounded-lg shadow-xs transition-colors flex items-center gap-1">
+                <span>⬇ Sample Fin Bid</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Bid Submission Form -->
+    <form action="/apply" method="POST" enctype="multipart/form-data" id="bidForm" class="space-y-6">
+
+        <!-- 1. Vendor Details Card (Read-only verification) -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-card p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-gem-100 text-gem-800 font-bold flex items-center justify-center text-xs">
+                        1
+                    </div>
+                    <h2 class="text-sm font-bold text-slate-900">Bidder Identity & Profile</h2>
+                </div>
+                <span class="text-[10px] font-bold uppercase font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    VERIFIED VENDOR
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span class="text-slate-400 block font-semibold text-[10px] uppercase">Company Name</span>
+                    <span class="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 block">{{ current_vendor.company_name }}</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 font-mono">
+                    <span class="text-slate-400 block font-semibold text-[10px] uppercase font-sans">GSTIN</span>
+                    <span class="font-bold text-gem-800 text-xs sm:text-sm mt-0.5 block">{{ current_vendor.gstin }}</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span class="text-slate-400 block font-semibold text-[10px] uppercase">Registered Email</span>
+                    <span class="font-semibold text-slate-800 text-xs mt-0.5 block truncate">{{ current_vendor.email }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Select Active Tender Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-card p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-gem-100 text-gem-800 font-bold flex items-center justify-center text-xs">
+                        2
+                    </div>
+                    <h2 class="text-sm font-bold text-slate-900">Select Procurement Tender</h2>
+                </div>
+                <span class="text-[10px] text-slate-400 font-medium">Select tender to link bid</span>
+            </div>
+
+            <div>
+                <label for="tender_id" class="block text-xs font-bold text-slate-700 mb-1.5">
+                    Target Government Tender <span class="text-rose-500">*</span>
+                </label>
+                <select id="tender_id" name="tender_id" required onchange="updateTenderPreview(this)"
+                        class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none font-medium">
+                    <option value="">— Select an Active Tender —</option>
+                    {% for t in tenders %}
+                    <option value="{{ t.id }}" {% if selected_tender_id == t.id %}selected{% endif %}
+                            data-code="{{ t.tender_id }}"
+                            data-dept="{{ t.department }}"
+                            data-value="{{ t.tender_value }}"
+                            data-deadline="{{ t.deadline[:10] }}">
+                        {{ t.tender_id }} · {{ t.title }} (₹{{ "{:,.2f}".format(t.tender_value) }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Dynamic Tender Details Preview Banner -->
+            <div id="tenderPreviewBox" class="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80 {% if not selected_tender_id %}hidden{% endif %}">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div>
+                        <span class="font-bold text-slate-900 font-mono text-xs" id="prevCode">
+                            {% if selected_tender %}{{ selected_tender.tender_id }}{% endif %}
+                        </span>
+                        <div class="text-[11px] text-slate-500 mt-0.5" id="prevDept">
+                            {% if selected_tender %}{{ selected_tender.department }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="text-left sm:text-right font-mono">
+                        <span class="text-[10px] text-slate-400 block uppercase font-sans">Budget & Deadline</span>
+                        <span class="font-bold text-gem-900 text-xs" id="prevVal">
+                            {% if selected_tender %}₹{{ "{:,.2f}".format(selected_tender.tender_value) }} · Deadline: {{ selected_tender.deadline[:10] }}{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Compliance Documents Upload Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-card p-5 sm:p-6 space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-gem-100 text-gem-800 font-bold flex items-center justify-center text-xs">
+                        3
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Upload Required Compliance Documents</h2>
+                        <p class="text-[11px] text-slate-500">Only PDF documents allowed (Maximum 25 MB per file).</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-mono text-gem-700 bg-gem-50 px-2.5 py-1 rounded-lg border border-gem-200 font-bold">
+                    AI OCR ENABLED
+                </span>
+            </div>
+
+            <!-- Document Upload Fields Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+                <!-- 1. Technical Bid Document (Mandatory) -->
+                <div class="space-y-1.5">
+                    <label class="flex items-center justify-between text-xs font-bold text-slate-700">
+                        <span>Technical Bid Proposal (PDF) <span class="text-rose-500">*</span></span>
+                        <span class="text-[10px] text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded font-mono font-bold">MANDATORY</span>
+                    </label>
+                    <div class="dropzone border-2 border-dashed border-slate-300 hover:border-gem-500 rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 hover:bg-gem-50/30 relative"
+                         onclick="document.getElementById('technical_bid_pdf').click()">
+                        <input type="file" id="technical_bid_pdf" name="technical_bid_pdf" accept=".pdf" required class="hidden" onchange="fileSelected(this, 'techFileName', 'techFileSize')">
+                        <svg class="w-7 h-7 mx-auto text-slate-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <div class="text-xs font-semibold text-slate-700">Click to select Technical Bid PDF</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">SLA specifications, compliance matrix</div>
+                        <div id="techFileName" class="mt-2 text-xs font-mono font-bold text-gem-700 hidden"></div>
+                        <div id="techFileSize" class="text-[10px] text-slate-500 font-mono hidden"></div>
+                    </div>
+                </div>
+
+                <!-- 2. Financial Bid Document (Mandatory) -->
+                <div class="space-y-1.5">
+                    <label class="flex items-center justify-between text-xs font-bold text-slate-700">
+                        <span>Financial Price Schedule (PDF) <span class="text-rose-500">*</span></span>
+                        <span class="text-[10px] text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded font-mono font-bold">MANDATORY</span>
+                    </label>
+                    <div class="dropzone border-2 border-dashed border-slate-300 hover:border-gem-500 rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 hover:bg-gem-50/30 relative"
+                         onclick="document.getElementById('financial_bid_pdf').click()">
+                        <input type="file" id="financial_bid_pdf" name="financial_bid_pdf" accept=".pdf" required class="hidden" onchange="fileSelected(this, 'finFileName', 'finFileSize')">
+                        <svg class="w-7 h-7 mx-auto text-slate-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        <div class="text-xs font-semibold text-slate-700">Click to select Financial Bid PDF</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Schedule of prices & BOQ rates</div>
+                        <div id="finFileName" class="mt-2 text-xs font-mono font-bold text-gem-700 hidden"></div>
+                        <div id="finFileSize" class="text-[10px] text-slate-500 font-mono hidden"></div>
+                    </div>
+                </div>
+
+                <!-- 3. GST Registration Certificate (Mandatory) -->
+                <div class="space-y-1.5">
+                    <label class="flex items-center justify-between text-xs font-bold text-slate-700">
+                        <span>GST Registration Certificate (PDF) <span class="text-rose-500">*</span></span>
+                        <span class="text-[10px] text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded font-mono font-bold">MANDATORY</span>
+                    </label>
+                    <div class="dropzone border-2 border-dashed border-slate-300 hover:border-gem-500 rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 hover:bg-gem-50/30 relative"
+                         onclick="document.getElementById('gst_cert_pdf').click()">
+                        <input type="file" id="gst_cert_pdf" name="gst_cert_pdf" accept=".pdf" required class="hidden" onchange="fileSelected(this, 'gstFileName', 'gstFileSize')">
+                        <svg class="w-7 h-7 mx-auto text-slate-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <div class="text-xs font-semibold text-slate-700">Click to select GST Certificate PDF</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Form GST REG-06 matching GSTIN</div>
+                        <div id="gstFileName" class="mt-2 text-xs font-mono font-bold text-gem-700 hidden"></div>
+                        <div id="gstFileSize" class="text-[10px] text-slate-500 font-mono hidden"></div>
+                    </div>
+                </div>
+
+                <!-- 4. MSME / Past Experience / Additional Certificate (Optional) -->
+                <div class="space-y-1.5">
+                    <label class="flex items-center justify-between text-xs font-bold text-slate-700">
+                        <span>MSME / Past Experience Proof (PDF)</span>
+                        <span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-mono">OPTIONAL</span>
+                    </label>
+                    <div class="dropzone border-2 border-dashed border-slate-300 hover:border-gem-500 rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 hover:bg-gem-50/30 relative"
+                         onclick="document.getElementById('additional_doc_pdf').click()">
+                        <input type="file" id="additional_doc_pdf" name="additional_doc_pdf" accept=".pdf" class="hidden" onchange="fileSelected(this, 'addFileName', 'addFileSize')">
+                        <svg class="w-7 h-7 mx-auto text-slate-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        <div class="text-xs font-semibold text-slate-700">Click to select Udyam / Experience PDF</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Optional exemption or experience certificate</div>
+                        <div id="addFileName" class="mt-2 text-xs font-mono font-bold text-gem-700 hidden"></div>
+                        <div id="addFileSize" class="text-[10px] text-slate-500 font-mono hidden"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 4. Statutory Declaration & Submission Button -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-card p-5 sm:p-6 space-y-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" required checked class="mt-0.5 rounded text-gem-700 focus:ring-gem-600 border-slate-300">
+                <span class="text-xs text-slate-600 leading-relaxed">
+                    I declare on behalf of <strong class="text-slate-900">{{ current_vendor.company_name }}</strong> that all submitted documents are genuine and un-tampered. I understand that false or misleading submissions will attract debarment under GFR 2017 Rule 151.
+                </span>
+            </label>
+
+            <button type="submit" id="submitBtn"
+                    class="w-full py-4 bg-gradient-to-r from-gem-700 via-gem-800 to-gem-900 hover:from-gem-800 hover:to-gem-950 text-white font-bold text-sm rounded-xl shadow-lg shadow-gem-900/20 hover:shadow-xl transition-all flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Submit Tender Bid & Queue for AI Verification</span>
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+function fileSelected(input, nameId, sizeId) {
+    const nameEl = document.getElementById(nameId);
+    const sizeEl = document.getElementById(sizeId);
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            alert('Only PDF documents are allowed. Please select a valid PDF file.');
+            input.value = '';
+            nameEl.classList.add('hidden');
+            sizeEl.classList.add('hidden');
+            return;
+        }
+        nameEl.innerText = '✓ ' + file.name;
+        nameEl.classList.remove('hidden');
+        const sizeKb = Math.round(file.size / 1024);
+        sizeEl.innerText = `${sizeKb} KB (PDF Document)`;
+        sizeEl.classList.remove('hidden');
+    }
+}
+
+function updateTenderPreview(select) {
+    const opt = select.options[select.selectedIndex];
+    const preview = document.getElementById('tenderPreviewBox');
+    if (select.value) {
+        document.getElementById('prevCode').innerText = opt.dataset.code;
+        document.getElementById('prevDept').innerText = opt.dataset.dept;
+        document.getElementById('prevVal').innerText = `₹${Number(opt.dataset.value).toLocaleString('en-IN', {minimumFractionDigits: 2})} · Deadline: ${opt.dataset.deadline}`;
+        preview.classList.remove('hidden');
+    } else {
+        preview.classList.add('hidden');
+    }
+}
+
+document.getElementById('bidForm').onsubmit = function() {
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Encrypting & Storing Documents in GeM Database...</span>
+    `;
+    btn.disabled = true;
+};
+</script>
+{% endblock %}

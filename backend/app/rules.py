@@ -31,7 +31,10 @@ def _field(doc: dict, name: str):
 
 def _value(doc: dict, name: str):
     item = _field(doc, name)
-    return item["extracted_value"] if item else None
+    if not item:
+        return None
+    return item.get("extracted_value") or item.get("value")
+
 
 
 def _outcome(status, confidence, rule, explanation, flags=None, evidence=None):

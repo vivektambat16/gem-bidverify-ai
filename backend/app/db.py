@@ -31,7 +31,12 @@ CREATE TABLE IF NOT EXISTS bids (
   tender_pk INTEGER NOT NULL REFERENCES tenders(id), bidder_pk INTEGER NOT NULL REFERENCES bidders(id),
   submission_date TEXT NOT NULL, status TEXT NOT NULL, compliance_score INTEGER DEFAULT 0, risk_level TEXT DEFAULT 'LOW',
   ai_recommendation TEXT, ai_explanation TEXT, risk_score INTEGER DEFAULT 0, risk_factors TEXT DEFAULT '[]',
-  recommended_action TEXT);
+  recommended_action TEXT, tender_id TEXT, vendor_name TEXT, gstin TEXT, file_paths TEXT);
+CREATE TABLE IF NOT EXISTS vendors (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, company_name TEXT NOT NULL, gstin TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, pan TEXT, contact_phone TEXT,
+  business_type TEXT DEFAULT 'REGULAR', address TEXT, created_at TEXT NOT NULL);
+
 CREATE TABLE IF NOT EXISTS documents (
   id INTEGER PRIMARY KEY AUTOINCREMENT, bid_pk INTEGER NOT NULL REFERENCES bids(id) ON DELETE CASCADE,
   file_name TEXT NOT NULL, file_type TEXT, file_size_kb INTEGER, stored_path TEXT, classified_type TEXT,
@@ -133,8 +138,14 @@ def verify_audit_chain(conn) -> dict:
 def init_db():
     with connect() as conn:
         conn.executescript(SCHEMA)
+        for col in ("tender_id", "vendor_name", "gstin", "file_paths"):
+            try:
+                conn.execute(f"ALTER TABLE bids ADD COLUMN {col} TEXT")
+            except sqlite3.OperationalError:
+                pass
         if not row(conn, "SELECT id FROM users LIMIT 1"):
             seed_demo_data(conn)
+
 
 
 def _b(v):

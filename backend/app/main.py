@@ -36,6 +36,15 @@ def current_user(authorization: Optional[str] = Header(None)) -> dict:
     return services.user_from_token(authorization.split(" ", 1)[1].strip())
 
 
+def require_officer(user: dict = Depends(current_user)) -> dict:
+    role = (user.get("role") or "").strip()
+    ALLOWED_OFFICER_ROLES = {"Procurement Officer", "Evaluation Cell Lead", "Vigilance Officer", "admin", "Super Admin"}
+    if role not in ALLOWED_OFFICER_ROLES:
+        raise ServiceError(403, "Access denied: This operation requires an authorized Procurement Officer role.")
+    return user
+
+
+
 # ----------------------------------------------------------------------------- request models
 class LoginIn(BaseModel):
     username: str
@@ -152,8 +161,8 @@ def reset_password(body: ResetPasswordIn):
 
 
 @app.post("/api/auth/register")
-def register(body: RegisterIn):
-    return services.register(_dump(body))
+def register(body: RegisterIn, admin_user: dict = Depends(require_officer)):
+    return services.register(_dump(body), authorized_by=admin_user)
 
 
 @app.get("/api/auth/me")
@@ -163,139 +172,139 @@ def me(user: dict = Depends(current_user)):
 
 # ----------------------------------------------------------------------------- dashboard
 @app.get("/api/dashboard")
-def dashboard(user: dict = Depends(current_user)):
+def dashboard(user: dict = Depends(require_officer)):
     return services.dashboard()
 
 
 # ----------------------------------------------------------------------------- tenders / bidders
 @app.get("/api/tenders")
-def list_tenders(user: dict = Depends(current_user)):
+def list_tenders(user: dict = Depends(require_officer)):
     return services.list_tenders()
 
 
 @app.get("/api/tenders/{tender_ref}")
-def get_tender(tender_ref: str, user: dict = Depends(current_user)):
+def get_tender(tender_ref: str, user: dict = Depends(require_officer)):
     return services.get_tender(tender_ref)
 
 
 @app.post("/api/tenders")
-def create_tender(body: TenderIn, user: dict = Depends(current_user)):
+def create_tender(body: TenderIn, user: dict = Depends(require_officer)):
     return services.create_tender(_dump(body), user)
 
 
 @app.post("/api/tenders/{tender_id}/requirements")
-def add_requirement(tender_id: int, body: RequirementIn, user: dict = Depends(current_user)):
+def add_requirement(tender_id: int, body: RequirementIn, user: dict = Depends(require_officer)):
     return services.add_requirement(tender_id, _dump(body), user)
 
 
 @app.get("/api/bidders")
-def list_bidders(user: dict = Depends(current_user)):
+def list_bidders(user: dict = Depends(require_officer)):
     return services.list_bidders()
 
 
 @app.post("/api/bidders")
-def create_bidder(body: BidderIn, user: dict = Depends(current_user)):
+def create_bidder(body: BidderIn, user: dict = Depends(require_officer)):
     return services.create_bidder(_dump(body), user)
 
 
 # ----------------------------------------------------------------------------- bids
 @app.get("/api/bids")
-def list_bids(tender_id: Optional[int] = Query(None), user: dict = Depends(current_user)):
+def list_bids(tender_id: Optional[int] = Query(None), user: dict = Depends(require_officer)):
     return services.list_bids(tender_id)
 
 
 @app.get("/api/bids/{bid_ref}")
-def get_bid(bid_ref: str, user: dict = Depends(current_user)):
+def get_bid(bid_ref: str, user: dict = Depends(require_officer)):
     return services.get_bid(bid_ref)
 
 
 @app.post("/api/bids")
-def create_bid(body: BidIn, user: dict = Depends(current_user)):
+def create_bid(body: BidIn, user: dict = Depends(require_officer)):
     return services.create_bid(body.tender_id, body.bidder_id, user)
 
 
 @app.post("/api/bids/{bid_ref}/documents")
 def upload_document(bid_ref: str, file: UploadFile = File(...), classified_type_hint: Optional[str] = Form(None),
-                    user: dict = Depends(current_user)):
+                    user: dict = Depends(require_officer)):
     return services.upload_document(bid_ref, file.filename, file.file.read(), classified_type_hint, user)
 
 
 @app.delete("/api/bids/{bid_ref}/documents/{doc_id}")
-def delete_document(bid_ref: str, doc_id: int, user: dict = Depends(current_user)):
+def delete_document(bid_ref: str, doc_id: int, user: dict = Depends(require_officer)):
     return services.delete_document(bid_ref, doc_id, user)
 
 
 @app.get("/api/documents/{doc_id}/file")
-def download_document(doc_id: int, user: dict = Depends(current_user)):
+def download_document(doc_id: int, user: dict = Depends(require_officer)):
     path, name = services.document_file(doc_id)
     return FileResponse(path, filename=name)
 
 
 @app.put("/api/bids/{bid_ref}/compliance/{result_id}")
-def update_compliance(bid_ref: str, result_id: int, body: ComplianceUpdateIn, user: dict = Depends(current_user)):
+def update_compliance(bid_ref: str, result_id: int, body: ComplianceUpdateIn, user: dict = Depends(require_officer)):
     return services.update_compliance_result(bid_ref, result_id, _dump(body), user)
 
 
 @app.post("/api/bids/{bid_ref}/verify")
-def verify_bid(bid_ref: str, user: dict = Depends(current_user)):
+def verify_bid(bid_ref: str, user: dict = Depends(require_officer)):
     return services.verify_bid(bid_ref, user)
 
 
 @app.post("/api/bids/{bid_ref}/decision")
-def decision(bid_ref: str, body: DecisionIn, user: dict = Depends(current_user)):
+def decision(bid_ref: str, body: DecisionIn, user: dict = Depends(require_officer)):
     return services.submit_decision(bid_ref, _dump(body), user)
 
 
 # ----------------------------------------------------------------------------- integrations (simulated)
 @app.get("/api/integrations/status")
-def integrations_status(user: dict = Depends(current_user)):
+def integrations_status(user: dict = Depends(require_officer)):
     return services.integrations_status()
 
 
 @app.post("/api/integrations/test-gst")
-def test_gst(gstin: str, user: dict = Depends(current_user)):
+def test_gst(gstin: str, user: dict = Depends(require_officer)):
     from . import adapters
     return adapters.lookup_gst(gstin)
 
 
 @app.post("/api/integrations/test-pan")
-def test_pan(pan: str, user: dict = Depends(current_user)):
+def test_pan(pan: str, user: dict = Depends(require_officer)):
     from . import adapters
     return adapters.lookup_pan(pan)
 
 
 @app.post("/api/integrations/test-debarment")
-def test_debarment(company_name: str, pan: str = "", user: dict = Depends(current_user)):
+def test_debarment(company_name: str, pan: str = "", user: dict = Depends(require_officer)):
     from . import adapters
     return adapters.check_debarment(company_name, pan)
 
 
 # ----------------------------------------------------------------------------- audit / notifications / admin
 @app.get("/api/audit")
-def audit(user: dict = Depends(current_user)):
+def audit(user: dict = Depends(require_officer)):
     return services.audit_logs()
 
 
 @app.get("/api/audit/verify")
-def audit_verify(user: dict = Depends(current_user)):
+def audit_verify(user: dict = Depends(require_officer)):
     return services.audit_verify()
 
 
 @app.get("/api/notifications")
-def notifications(user: dict = Depends(current_user)):
+def notifications(user: dict = Depends(require_officer)):
     return services.notifications()
 
 
 @app.post("/api/notifications/{notification_id}/read")
-def read_notification(notification_id: int, user: dict = Depends(current_user)):
+def read_notification(notification_id: int, user: dict = Depends(require_officer)):
     return services.mark_notification_read(notification_id)
 
 
 @app.get("/api/admin/export")
-def export_data(user: dict = Depends(current_user)):
+def export_data(user: dict = Depends(require_officer)):
     return services.export_data()
 
 
 @app.post("/api/admin/reset-demo")
-def reset_demo(user: dict = Depends(current_user)):
+def reset_demo(user: dict = Depends(require_officer)):
     return services.reset_demo(user)

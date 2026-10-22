@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Login - GeM e-Procurement Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+
+    <!-- Header Intro -->
+    <div class="mb-6 text-center">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gem-100 text-gem-800 text-xs font-bold mb-3 border border-gem-200">
+            <span>🔐 Official Vendor Access</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Vendor Portal Sign In
+        </h1>
+        <p class="text-xs text-slate-500 mt-1">
+            Access active government e-tenders, submit bids, and track compliance status.
+        </p>
+    </div>
+
+    <!-- Quick Demo Logins Banner -->
+    <div class="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/90 rounded-2xl p-4 mb-6 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                <span>⚡</span> Quick Demo Logins for Evaluation:
+            </span>
+            <span class="text-[10px] uppercase font-mono text-amber-700 bg-amber-100 px-2 py-0.5 rounded font-bold">1-Click</span>
+        </div>
+        <div class="space-y-2">
+            <button type="button" onclick="setDemoCredentials('bids@nexgencompute.in', 'Vendor@2026')"
+                    class="w-full text-left p-2.5 rounded-xl bg-white hover:bg-amber-100/50 border border-amber-200/80 transition-all text-xs flex items-center justify-between group">
+                <div>
+                    <div class="font-bold text-slate-900 group-hover:text-amber-900">NexGen Compute Technologies</div>
+                    <div class="text-[10px] text-slate-500 font-mono">bids@nexgencompute.in · MSME</div>
+                </div>
+                <span class="text-[11px] font-bold text-amber-700 group-hover:translate-x-0.5 transition-transform">Use &rarr;</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Login Form Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-card p-6 sm:p-8">
+        <form action="/login" method="POST" class="space-y-4">
+            <input type="hidden" name="next" value="{{ next_url or '' }}">
+
+            <div>
+                <label for="identifier" class="block text-xs font-bold text-slate-700 mb-1.5">
+                    Registered Email or 15-digit GSTIN <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <input type="text" id="identifier" name="identifier" required
+                           placeholder="bids@company.in or 27AABCT3421K1Z5"
+                           class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none transition-all placeholder:text-slate-400">
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="password" class="block text-xs font-bold text-slate-700">
+                        Password <span class="text-rose-500">*</span>
+                    </label>
+                    <a href="#" onclick="alert('For project review demo, please use Vendor@2026 or register a new company profile.'); return false;" class="text-[11px] text-gem-700 hover:underline">Forgot?</a>
+                </div>
+                <div class="relative">
+                    <input type="password" id="password" name="password" required
+                           placeholder="••••••••"
+                           class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gem-600 focus:border-gem-600 focus:outline-none transition-all">
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-gem-700 to-gem-900 hover:from-gem-800 hover:to-gem-950 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md shadow-gem-900/20 hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                    <span>Sign In to Vendor Dashboard</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                </button>
+            </div>
+
+            <div class="text-center text-xs text-slate-500 pt-3 border-t border-slate-100">
+                New vendor on GeM? 
+                <a href="/register" class="text-gem-700 hover:text-gem-900 font-bold hover:underline">
+                    Register your company now &rarr;
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<script>
+function setDemoCredentials(email, pwd) {
+    document.getElementById('identifier').value = email;
+    document.getElementById('password').value = pwd;
+}
+</script>
+{% endblock %}

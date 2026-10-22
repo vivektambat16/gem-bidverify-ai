@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowRightIcon,
   CircleAlertIcon,
@@ -22,6 +22,8 @@ import { api } from '../api';
 export const LoginPage = () => {
   const { setSession: e } = useAuth(),
     t = useNavigate(),
+    location = useLocation(),
+    isUnauthorized = new URLSearchParams(location.search).get('unauthorized') === '1',
     [r, n] = useState('signin'),
     [i, a] = useState('officer'),
     [o, l] = useState('demo123'),
@@ -386,24 +388,43 @@ export const LoginPage = () => {
               className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${r === 'signin' ? 'text-pine-800 border-b-2 border-pine-700 bg-pine-50/50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
             >
               <LogInIcon className="w-3.5 h-3.5" />
-              Sign In
+              Officer Sign In
             </button>
             <button
-              onClick={() => Nr('register')}
-              className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${r === 'register' ? 'text-champagne-800 border-b-2 border-champagne-600 bg-champagne-50/50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+              onClick={() => Nr('notice')}
+              className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${r === 'notice' ? 'text-champagne-800 border-b-2 border-champagne-600 bg-champagne-50/50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
             >
-              <UserPlusIcon className="w-3.5 h-3.5" />
-              Create Account
+              <ShieldCheckIcon className="w-3.5 h-3.5" />
+              Demo Credentials
             </button>
           </div>
           {r === 'signin' && c === 'credentials' && (
             <form onSubmit={mo} className="p-6 space-y-4">
+              {isUnauthorized && !$ && (
+                <div className="p-3 bg-rose-50 text-rose-800 rounded-xl text-xs font-semibold border border-rose-200 flex items-center gap-2">
+                  <CircleAlertIcon className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                  <span>Access Denied: Officer authorization required. Company/Vendor accounts must sign in via the GeM Vendor Portal.</span>
+                </div>
+              )}
               {$ && (
                 <div className="p-3 bg-rose-50 text-rose-800 rounded-xl text-xs font-semibold border border-rose-200 flex items-center gap-2">
                   <CircleAlertIcon className="w-4 h-4 text-rose-600 flex-shrink-0" />
                   <span>{$}</span>
                 </div>
               )}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Authorized Demo Credentials</div>
+                  <div className="font-mono text-slate-800 text-[11px] font-bold mt-0.5">officer / demo123</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { a('officer'); l('demo123'); }}
+                  className="px-2.5 py-1 bg-pine-700 hover:bg-pine-800 text-white rounded-lg text-[10px] font-bold shadow-xs transition-colors"
+                >
+                  Auto Fill
+                </button>
+              </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                   Official Username / User ID
@@ -532,7 +553,7 @@ export const LoginPage = () => {
                             value={Ge}
                             onChange={(Z) => H(Z.target.value)}
                             className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-600 focus:outline-none"
-                            placeholder="your.email@gmail.com"
+                            placeholder="officer@nic.in"
                           />
                         </div>
                       </div>
@@ -694,140 +715,60 @@ export const LoginPage = () => {
               </div>
             </div>
           )}
-          {r === 'register' && _ === 'credentials' && (
-            <form onSubmit={qO} className="p-6 space-y-3">
-              {$ && (
-                <div className="p-3 bg-rose-50 text-rose-800 rounded-xl text-xs font-semibold border border-rose-200 flex items-center gap-2">
-                  <CircleAlertIcon className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                  <span>{$}</span>
+          {r === 'notice' && (
+            <div className="p-6 space-y-4 text-xs">
+              <div className="p-3.5 bg-amber-50 text-amber-950 rounded-xl border border-amber-200 space-y-1.5">
+                <div className="font-bold text-amber-900 flex items-center gap-1.5">
+                  <ShieldCheckIcon className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <span>Statutory Officer Authorization Mandate</span>
                 </div>
-              )}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    required
-                    value={f}
-                    onChange={(Z) => d(Z.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-600 focus:outline-none"
-                    placeholder="e.g. Amit Sharma"
-                  />
-                </div>
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  Under General Financial Rules (GFR 2017) Rule 149, Procurement Officer accounts cannot be created via public self-registration. All official accounts are pre-authorized and provisioned by the GeM Competent Authority.
+                </p>
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Username
-                </label>
-                <div className="relative">
-                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    required
-                    value={p}
-                    onChange={(Z) => h(Z.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-600 focus:outline-none"
-                    placeholder="Choose unique username"
-                  />
+
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                <div className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+                  Authorized Demonstration Credentials:
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Official Government Email
-                </label>
-                <div className="relative">
-                  <MailIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="email"
-                    required
-                    value={y}
-                    onChange={(Z) => x(Z.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-600 focus:outline-none"
-                    placeholder="name@gem.gov.in"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Phone Number (Optional)
-                </label>
-                <div className="relative">
-                  <PhoneIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="tel"
-                    value={g}
-                    onChange={(Z) => v(Z.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-600 focus:outline-none"
-                    placeholder="+91 98200 XXXXX"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <LockIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                    <input
-                      type={V ? 'text' : 'password'}
-                      required
-                      value={m}
-                      onChange={(Z) => b(Z.target.value)}
-                      className="w-full pl-9 pr-8 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-600 focus:outline-none"
-                      placeholder="Min 6 chars"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => X(!V)}
-                      className="absolute right-2 top-2 text-slate-400 hover:text-slate-600"
-                    >
-                      {V ? (
-                        <EyeOffIcon className="w-3.5 h-3.5" />
-                      ) : (
-                        <EyeIcon className="w-3.5 h-3.5" />
-                      )}
-                    </button>
+                <div className="space-y-1.5 font-mono text-xs">
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500 font-sans">Username:</span>
+                    <strong className="text-pine-900">officer</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500 font-sans">Password:</span>
+                    <strong className="text-pine-900">demo123</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500 font-sans">Role:</span>
+                    <span className="text-slate-700">Procurement Officer</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-slate-500 font-sans">Department:</span>
+                    <span className="text-slate-700 truncate max-w-[180px]">IT & Electronics</span>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Confirm
-                  </label>
-                  <div className="relative">
-                    <LockIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                    <input
-                      type="password"
-                      required
-                      value={j}
-                      onChange={(Z) => w(Z.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-600 focus:outline-none"
-                      placeholder="Re-enter"
-                    />
-                  </div>
-                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    a('officer');
+                    l('demo123');
+                    Nr('signin');
+                  }}
+                  className="w-full py-2.5 bg-gradient-to-r from-pine-800 to-teal-800 hover:from-pine-900 hover:to-teal-900 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <LogInIcon className="w-3.5 h-3.5" />
+                  <span>Fill Demo Officer Credentials & Sign In</span>
+                </button>
               </div>
-              <button
-                type="submit"
-                disabled={R}
-                className="w-full py-3 bg-gradient-to-r from-pine-800 to-teal-800 hover:from-pine-900 hover:to-teal-900 text-white text-xs font-bold rounded-xl shadow-glow-teal transition-all flex items-center justify-center gap-2 group mt-1"
-              >
-                {R ? (
-                  'Creating Account...'
-                ) : (
-                  <>
-                    <UserPlusIcon className="w-4 h-4" />
-                    <span>{'Create Profile & Verify Email'}</span>
-                    <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                  </>
-                )}
-              </button>
-            </form>
+
+              <div className="text-[11px] text-slate-500 text-center">
+                Are you a tenderer or participating company? Access the <a href="http://127.0.0.1:8001" target="_blank" rel="noreferrer" className="text-pine-700 font-bold hover:underline">GeM Vendor Portal</a>.
+              </div>
+            </div>
           )}
-          {r === 'register' && _ === 'otp' && Jv(KO)}
           <div className="p-4 bg-slate-50 border-t border-slate-100 text-center text-[10.5px] text-slate-500 leading-tight">
             Secure officer sign-in. All authentication attempts are logged for CVC vigilance review.
           </div>
