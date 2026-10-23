@@ -5,7 +5,7 @@
 const BASE = 
   import.meta.env.VITE_BACKEND_URL || 
   import.meta.env.VITE_API_BASE_URL || 
-  'https://gem-bidverify-ai.onrender.com';
+  'https://gem-bidverify-ai.onrender.com/api';
 const TOKEN_KEY = 'gem_officer_token';
 
 function getToken() {
