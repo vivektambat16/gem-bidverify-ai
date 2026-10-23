@@ -2,10 +2,14 @@
  * Real API client: talks to the FastAPI backend (see /backend).
  * Same method names as mockApi.js so the screens work with either.
  */
-const BASE = 
-  import.meta.env.VITE_BACKEND_URL || 
-  import.meta.env.VITE_API_BASE_URL || 
-  'https://gem-bidverify-ai.onrender.com/api';
+const configuredBase = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_BASE_URL;
+const defaultBase = import.meta.env.PROD
+  ? 'https://gem-bidverify-ai.onrender.com/api'
+  : '/api';
+const baseWithoutTrailingSlash = (configuredBase || defaultBase).replace(/\/+$/, '');
+const BASE = /\/api$/i.test(baseWithoutTrailingSlash)
+  ? baseWithoutTrailingSlash
+  : `${baseWithoutTrailingSlash}/api`;
 const TOKEN_KEY = 'gem_officer_token';
 
 function getToken() {
